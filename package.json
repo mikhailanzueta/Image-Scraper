@@ -1,0 +1,11 @@
+{
+    "name": "image-scraper",
+    "version": "1.0.0",
+    "description": "Reddit image scraper",
+    "scripts": {
+      "dev": "python scraper.py"
+    },
+    "author": "",
+    "license": "ISC"
+  }
+  
