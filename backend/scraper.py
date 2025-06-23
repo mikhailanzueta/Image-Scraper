@@ -76,33 +76,39 @@ def scrape_image_urls(url, limit=100):
     print(f"Collected {len(results)} images")
     return results[:limit]
 
-async def get_images(session, url, index):
+async def get_images(session, url, semaphore):
     try:
-        async with session.get(url) as response:
-            content = await response
-            if response.status == 200:
-                print(f"Content: ", content)
-                ext = url.split('.')[-1].split('?')[0]
-                if ext.lower() not in ['jpg', 'jpeg', 'png']:
-                    ext = 'jpg'
-                filename = f"image_{index + 1}.{ext}"
-                print(f"Fetched: {filename}")
+        async with semaphore:
+            async with session.get(url) as response:
+                content = await response
+                if response.status == 200:
+                    print(f"Content: ", content)
+                    filename = url.split('.')[-1].split('?')[0]
+                    if filename.lower() not in ['jpg', 'jpeg', 'png']:
+                        filename = 'jpg'
+                    with open(filename, 'wb') as f:
+                        f.write(content)
                 return filename, content
     except Exception as e:
         print(f"Error downloading {url}: {e}")
 
 
-async def download_and_zip(image_urls):
-    zip_buffer = io.BytesIO()
+# async def download_and_zip(image_urls):
+#     zip_buffer = io.BytesIO()
 
-    async with aiohttp.ClientSession() as session:
-        tasks = [get_images(session, url, index) for index, url in enumerate(image_urls)]
-        results = await asyncio.gather(*tasks)
-        print(f"results: ", results)
-        with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
-            for filename, content in results:
-                if filename and content:
-                    zip_file.writestr(filename, content)
-        return results
+#     semaphore = asyncio.Semaphore(3)
 
+#     async with aiohttp.ClientSession() as session:
+#         tasks = []
+#         for url in image_urls:
+#             task = asyncio.ensure_future(get_images(session, url, semaphore))
+#             tasks.append(task)
+#         results = await asyncio.gather(*tasks)
+#         print(f"results: ", results)
+#         with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
+#             for filename, content in results:
+#                 if filename and content:
+#                     zip_file.writestr(filename, content)
+#     zip_buffer.seek(0)
+#     return zip_buffer
 

@@ -1,7 +1,7 @@
 from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
 import zipfile, requests, io, os, json, time
-from scraper import scrape_image_urls, download_and_zip
+from scraper import scrape_image_urls
 
 app = Flask(__name__)
 CORS(app) 
@@ -13,6 +13,7 @@ def index():
 @app.route("/scrape", methods=["POST"])
 def scrape():
     data = request.get_json()
+    print(f"Request data: ", data)
     url = data.get('url')
     subreddit = data.get('subreddit')
     num_of_images = data.get('numImages')
@@ -29,7 +30,10 @@ def scrape():
 
     try:
         image_urls = scrape_image_urls(url, number_of_images)
-        zip_buffer = download_and_zip(image_urls)
+        print(f"image urls: ", image_urls)
+        zip_buffer = io.BytesIO()
+        zip_buffer.seek(0) # Call before send_file to ensure the file is read from the beginning.
+        print(zip_buffer)
         
         return send_file(
             zip_buffer,
@@ -42,22 +46,23 @@ def scrape():
         return jsonify({'error': str(e)}), 500
     
     
-@app.route("/download-images", methods=['POST'])
-def download_images(request):
-    data = request.get_json()
-    image_urls = data.get('image_urls', [])
-    zip_buffer = download_and_zip(image_urls)
+# @app.route("/download-images", methods=['POST'])
+# def download_images(request):
+#     data = request.get_json()
+#     print(f"download data: ", data)
+#     image_urls = data.get('image_urls', [])
+#     zip_buffer = download_and_zip(image_urls)
 
-    for image in request:
-        download_and_zip(image_urls)
+#     for image in request:
+#         download_and_zip(image_urls)
 
-        zip_buffer.seek(0)
-        return send_file(
-            zip_buffer,
-            mimetype='application/zip',
-            as_attachment=True,
-            download_name='images.zip'
-        )
+#         zip_buffer.seek(0)
+#         return send_file(
+#             zip_buffer,
+#             mimetype='application/zip',
+#             as_attachment=True,
+#             download_name='images.zip'
+#         )
         
 if __name__ == "__main__":
     app.run(host="localhost")
