@@ -20,10 +20,6 @@
 
     # Modified scrape function so that it uses send_file to send in memory zip buffer instead of return ing the zip path
 
-# may 26, 2025:
-# server needs to create a zip file in memory upon new requests
-# make a separate request for each image 
-# Then pass a reference to zip file
 
 # import io
 import zipfile
